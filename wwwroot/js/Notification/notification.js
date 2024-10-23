@@ -20,22 +20,28 @@ $(document).ready(function () {
         // Kiểm tra xem các trường cần thiết đã được điền chưa
         if (!notificationTitle || !notificationContent || !notificationType) {
             alert("Please fill in all required fields before selecting users.");
-            return; 
+            return;
         }
-        
+
         $('#dialogOverlay').fadeIn();
-        
+
         $.get('/Notification/GetUsers', function (data) {
             var userList = '';
             $.each(data, function (index, user) {
-                userList += '<li><input type="checkbox" value="' + user.user_id + '">' + user.full_name + '</li>';
+                userList += '<li><input type="checkbox" class="user-checkbox" value="' + user.user_id + '">' + user.full_name + '</li>';
             });
             $('#userList').html(userList); // Thêm danh sách user vào dialog
         }).fail(function () {
             alert('Failed to load users'); // Thông báo nếu việc tải dữ liệu thất bại
         });
     });
-    
+
+    // Thêm sự kiện cho checkbox "Select All" để chọn hoặc bỏ chọn tất cả người dùng
+    $('#selectAllUsers').on('change', function () {
+        var isChecked = $(this).is(':checked');
+        $('#userList input[type="checkbox"]').prop('checked', isChecked);
+    });
+
     $('#sendToUsers').click(function () {
         var selectedUsers = [];
         $('#dialogOverlay input[type="checkbox"]:checked').each(function () {
@@ -46,18 +52,18 @@ $(document).ready(function () {
             alert("No users selected");
             return;
         }
-        
+
         var notificationTitle = $('#subject').val();
         var notificationContent = $('#content').val();
-        var notificationType = $('.select-group select:eq(1)').val(); 
-        
+        var notificationType = $('.select-group select:eq(1)').val();
+
         if (!notificationTitle || !notificationContent || !notificationType) {
             alert("Please fill in all required fields.");
             return;
         }
-        
+
         var notificationData = {
-            UserIds: selectedUsers, 
+            UserIds: selectedUsers,
             NotificationTitle: notificationTitle, // Tiêu đề thông báo
             NotificationContent: notificationContent, // Nội dung thông báo
             NotificationType: notificationType // Loại thông báo (Info, Warning, Reminder)
@@ -94,6 +100,7 @@ $(document).ready(function () {
         }
     });
 });
+
 
 
 // Edit
@@ -194,3 +201,38 @@ $(document).on('click', '.delete', function () {
         });
     }
 });
+
+$(document).on('click', '#deleteSelected', function () {
+    var selectedIds = [];
+
+    // Lấy tất cả các checkbox đã được chọn
+    $('.select-notification:checked').each(function () {
+        selectedIds.push($(this).data('notification-id'));
+    });
+
+    if (selectedIds.length > 0) {
+        // Gửi yêu cầu xóa các notification đã chọn
+        $.ajax({
+            url: '/Notification/DeleteSelectedNotifications',
+            method: 'POST',
+            data: { ids: selectedIds },
+            traditional: true, // Sử dụng để truyền mảng đơn giản
+            success: function (response) {
+                if (response.success) {
+                    alert("Notifications deleted successfully.");
+                    location.reload(); // Tải lại trang sau khi xóa thành công
+                } else {
+                    alert("Failed to delete selected notifications: " + response.message);
+                }
+            },
+            error: function (error) {
+                alert("Error deleting selected notifications.");
+                console.error("Error:", error.responseText);
+            }
+        });
+    } else {
+        alert("No notifications selected for deletion.");
+    }
+});
+
+

@@ -107,11 +107,11 @@ namespace BrainStormEra.Controllers
                         NotificationContent = model.NotificationContent,
                         NotificationType = model.NotificationType,
                         NotificationCreatedAt = DateTime.Now,
-                        CreatedBy = createdBy 
+                        CreatedBy = createdBy
                     };
 
                     _context.Notifications.Add(newNotification);
-                    nextIdNumber++; 
+                    nextIdNumber++;
                 }
 
                 _context.SaveChanges();
@@ -180,6 +180,30 @@ namespace BrainStormEra.Controllers
 
             return Json(new { success = false, message = "Notification not found." });
         }
+
+        [HttpPost]
+        public IActionResult DeleteSelectedNotifications(string[] ids)
+        {
+            if (ids == null || ids.Length == 0)
+            {
+                return Json(new { success = false, message = "No notification IDs provided." });
+            }
+
+            var notifications = _context.Notifications
+                .Where(n => ids.Contains(n.NotificationId))
+                .ToList();
+
+            if (notifications.Any())
+            {
+                _context.Notifications.RemoveRange(notifications);
+                _context.SaveChanges();
+                return Json(new { success = true });
+            }
+
+            return Json(new { success = false, message = "No notifications found to delete." });
+        }
+
+
 
 
 

@@ -1,6 +1,9 @@
 ﻿@page
 @model BrainStormEra.Models.Account
+ @inject IHttpContextAccessor HttpContextAccessor
 @{
+    var userId = HttpContextAccessor.HttpContext.Request.Cookies["user_id"];
+
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -20,7 +23,7 @@
 </head>
 
 <body>
-    @await Html.PartialAsync("~/Views/Shared/Instructor/Header/_Header.cshtml")
+    @await Html.PartialAsync("~/Views/Shared/Instrutor/Header/_Header.cshtml")
 
     @await Html.PartialAsync("~/Views/Home/Notification/_NotificationsModal.cshtml")
     @await Html.PartialAsync("~/Views/Home/Notification/addNotificationModal.cshtml")
@@ -28,24 +31,54 @@
     @await Html.PartialAsync("~/Views/Shared/Chatbot/Chatbot.cshtml")
     @await Html.PartialAsync("~/Views/Shared/Footer/_Footer.cshtml")
 
+    <div class="dialog-overlay" id="dialogOverlay">
+        <div class="dialog">
+            <h3>Select Users</h3>
+            <div>
+                <input type="checkbox" id="selectAllUsers" /> Select All
+            </div>
+            <ul id="userList">
+                <!-- Danh sách user sẽ được tải từ server -->
+            </ul>
+            <button id="sendToUsers">Send</button>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"
             integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm"
             crossorigin="anonymous"></script>
 
     <script src="~/js/Notification/notification.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="~/js/Notification/notification.js"></script>
     <script>
         $(document).ready(function () {
             $('#notificationsModal').on('shown.bs.modal', function () {
-                $.get('@Url.Action("Notifications", "Notification")', function (data) {
-                    // Thay thế nội dung của modal-body bằng dữ liệu trả về
-                    $('#notificationsModal .modal-body').html($(data).find('.modal-body').html());
-                    console.log('User Role:', '@ViewBag.UserRole');
-                    console.log('User id:', '@ViewBag.UserId');
+                var userId = $('#userInfo').data('user-id');
 
+                $.get('@Url.Action("Notifications", "Notification")', function (data) {
+                    $('#notificationsModal .modal-body').html($(data).find('.modal-body').html());
+
+                    var currenrUser = '@userId';
+                    $('#selectAll').on('change', function () {
+                        if (this.checked) {
+                            $('.notification-item').each(function () {
+                                var createdBy = $(this).data('createdby');
+
+                                if (createdBy === currenrUser) {
+                                    $(this).find('.select-notification').show().prop('checked', true);
+                                }
+                            });
+                            $('#deleteSelected').show();
+                        } else {
+                            $('.select-notification').hide().prop('checked', false);
+                            $('#deleteSelected').hide();
+                        }
+                    });
                 });
             });
         });
+
         $(document).on('click', '.add-notification', function () {
             console.log('Add Notification button clicked');
             $('#notificationsModal').modal('hide');

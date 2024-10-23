@@ -9,13 +9,13 @@ public partial class Lesson
 
     public string? ChapterId { get; set; }
 
-    public string? LessonName { get; set; }
+    public string LessonName { get; set; } = null!;
 
     public string? LessonDescription { get; set; }
 
-    public string? LessonContent { get; set; }
+    public string LessonContent { get; set; } = null!;
 
-    public int? LessonOrder { get; set; }
+    public int LessonOrder { get; set; }
 
     public int? LessonTypeId { get; set; }
 

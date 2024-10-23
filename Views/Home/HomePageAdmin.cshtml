@@ -1,6 +1,8 @@
 ﻿    @page
     @model BrainStormEra.Views.Home.HomePageAdminModel
+    @inject IHttpContextAccessor HttpContextAccessor
     @{
+    var userId = HttpContextAccessor.HttpContext.Request.Cookies["user_id"];
     }
     <!DOCTYPE html>
     <html lang="en">
@@ -86,6 +88,9 @@
         <div class="dialog-overlay" id="dialogOverlay">
             <div class="dialog">
                 <h3>Select Users</h3>
+            <div>
+                <input type="checkbox" id="selectAllUsers" /> Select All
+            </div>
                 <ul id="userList">
                     <!-- Danh sách user sẽ được tải từ server -->
                 </ul>
@@ -102,14 +107,32 @@
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> 
         <script src="~/js/Notification/notification.js"></script>
         <script>
-            $(document).ready(function () {
-                $('#notificationsModal').on('shown.bs.modal', function () {
-                    $.get('@Url.Action("Notifications", "Notification")', function (data) {
-                        // Thay thế nội dung của modal-body bằng dữ liệu trả về
-                        $('#notificationsModal .modal-body').html($(data).find('.modal-body').html());
+        $(document).ready(function () {
+            $('#notificationsModal').on('shown.bs.modal', function () {
+                var userId = $('#userInfo').data('user-id'); 
+
+                $.get('@Url.Action("Notifications", "Notification")', function (data) {
+                    $('#notificationsModal .modal-body').html($(data).find('.modal-body').html());
+
+                    var currenrUser = '@userId';
+                    $('#selectAll').on('change', function () {
+                        if (this.checked) {
+                            $('.notification-item').each(function () {
+                                var createdBy = $(this).data('createdby');
+
+                                if (createdBy === currenrUser) {
+                                    $(this).find('.select-notification').show().prop('checked', true);
+                                }
+                            });
+                            $('#deleteSelected').show();
+                        } else {
+                            $('.select-notification').hide().prop('checked', false);
+                            $('#deleteSelected').hide();
+                        }
                     });
                 });
             });
+        });
             $(document).on('click', '.add-notification', function () {
                 console.log('Add Notification button clicked');
                 $('#notificationsModal').modal('hide');
@@ -126,7 +149,9 @@
                     window.location.href = '@Url.Action("Logout", "Login")';
                 }
             }
+
         </script>
+
     </body>
 
     </html>
